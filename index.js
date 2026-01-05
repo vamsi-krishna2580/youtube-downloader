@@ -10,27 +10,39 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 const YTDLP_BIN = 'yt-dlp';
-const COOKIES_PATH = '/cookies.txt'; // 👈 cookies inside container
+const COOKIES_PATH = '/cookies.txt';
 
 // ---------------- HELPERS ----------------
 function sanitizeFilename(name) {
   return name.replace(/[^a-zA-Z0-9 ._-]/g, '').trim();
 }
 
-// Common yt-dlp flags (Render + YouTube safe)
+// 🔥 Convert Shorts URLs → normal watch URLs
+function normalizeYouTubeUrl(url) {
+  const shortsMatch = url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/);
+  if (shortsMatch) {
+    return `https://www.youtube.com/watch?v=${shortsMatch[1]}`;
+  }
+  return url;
+}
+
+// 🔥 yt-dlp args tuned for Render + Shorts
 function ytDlpBaseArgs() {
   return [
-    '-4',                         // force IPv4 (Render)
-    '--cookies', COOKIES_PATH,    // 👈 USE BROWSER COOKIES
+    '-4', // force IPv4
+    '--cookies', COOKIES_PATH,
     '--no-check-certificate',
-    '--no-warnings'
+    '--no-warnings',
+    '--extractor-args', 'youtube:player_client=android'
   ];
 }
 
 // ---------------- GET VIDEO INFO ----------------
 app.post('/info', (req, res) => {
-  const url = req.body?.url;
+  let url = req.body?.url;
   if (!url) return res.status(400).json({ error: 'Missing URL' });
+
+  url = normalizeYouTubeUrl(url);
 
   const args = [
     ...ytDlpBaseArgs(),
@@ -88,8 +100,10 @@ app.post('/info', (req, res) => {
 
 // ---------------- PROGRESS (SSE) ----------------
 app.get('/progress', (req, res) => {
-  const url = req.query.url;
+  let url = req.query.url;
   if (!url) return res.status(400).end();
+
+  url = normalizeYouTubeUrl(url);
 
   res.set({
     'Cache-Control': 'no-cache',
@@ -134,9 +148,11 @@ app.get('/progress', (req, res) => {
 
 // ---------------- DOWNLOAD (STREAM DIRECTLY) ----------------
 app.get('/download', (req, res) => {
-  const url = req.query.url;
+  let url = req.query.url;
   const format = req.query.format || 'best';
   if (!url) return res.status(400).send('Missing URL');
+
+  url = normalizeYouTubeUrl(url);
 
   const filename = sanitizeFilename(`video-${Date.now()}.mp4`);
 
