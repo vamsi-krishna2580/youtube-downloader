@@ -10,18 +10,19 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 const YTDLP_BIN = 'yt-dlp';
+const COOKIES_PATH = '/cookies.txt'; // 👈 cookies inside container
 
 // ---------------- HELPERS ----------------
 function sanitizeFilename(name) {
   return name.replace(/[^a-zA-Z0-9 ._-]/g, '').trim();
 }
 
-// Common yt-dlp flags for Render stability
+// Common yt-dlp flags (Render + YouTube safe)
 function ytDlpBaseArgs() {
   return [
-    '-4',                         // FORCE IPv4 (VERY IMPORTANT for Render)
+    '-4',                         // force IPv4 (Render)
+    '--cookies', COOKIES_PATH,    // 👈 USE BROWSER COOKIES
     '--no-check-certificate',
-    '--no-call-home',
     '--no-warnings'
   ];
 }
@@ -160,10 +161,6 @@ app.get('/download', (req, res) => {
     stdio: ['ignore', 'pipe', 'pipe']
   });
 
-  dl.stdout.on('error', err => {
-    console.error('STDOUT PIPE ERROR:', err);
-  });
-
   dl.stdout.pipe(res);
 
   dl.stderr.on('data', d => {
@@ -175,9 +172,7 @@ app.get('/download', (req, res) => {
     res.end();
   });
 
-  req.on('close', () => {
-    dl.kill('SIGKILL');
-  });
+  req.on('close', () => dl.kill('SIGKILL'));
 });
 
 // ---------------- START SERVER ----------------
