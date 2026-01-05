@@ -10,7 +10,7 @@ app.use(helmet());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const YTDLP_BIN = 'yt-dlp'; // make sure yt-dlp is installed on the server
+const YTDLP_BIN = 'yt-dlp-2025.12.8'; // make sure yt-dlp is installed on the server
 
 // ---------- Helper ----------
 function sanitizeFilename(name) {
