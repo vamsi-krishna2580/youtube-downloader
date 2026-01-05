@@ -1,11 +1,12 @@
 {
   "name": "youtube-downloader",
   "version": "1.0.0",
-  "description": "",
+  "description": "Private YouTube video downloader",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"No tests specified\" && exit 0"
   },
   "author": "",
   "license": "ISC",
@@ -13,5 +14,8 @@
     "body-parser": "^2.2.0",
     "express": "^5.1.0",
     "helmet": "^8.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   }
 }
