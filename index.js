@@ -30,7 +30,6 @@ function normalizeYouTubeUrl(url) {
 function ytDlpBaseArgs() {
   return [
     '-4', // force IPv4
-    '--cookies', COOKIES_PATH,
     '--no-check-certificate',
     '--no-warnings',
     '--extractor-args', 'youtube:player_client=android,web,web_safari'
