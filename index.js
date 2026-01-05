@@ -33,7 +33,7 @@ function ytDlpBaseArgs() {
     '--cookies', COOKIES_PATH,
     '--no-check-certificate',
     '--no-warnings',
-    '--extractor-args', 'youtube:player_client=android'
+    '--extractor-args', 'youtube:player_client=android,web,web_safari'
   ];
 }
 
