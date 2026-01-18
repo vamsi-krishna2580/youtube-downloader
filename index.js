@@ -97,11 +97,17 @@ app.get('/download', (req, res) => {
 
   if (!url) return res.status(400).send('Missing URL');
 
-  // ---------- FORMAT NORMALIZATION ----------
+  // ---------- FORMAT NORMALIZATION (CRITICAL FIX) ----------
   if (!format) {
     format = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best';
-  } else if (!format.includes('+') && !format.includes('audio')) {
-    format = `${format}+bestaudio/best`;
+  } else {
+    // Repair '+' that turned into spaces
+    format = format.replace(/\s+/g, '+');
+
+    // If user selected video-only format, auto-add audio
+    if (!format.includes('+')) {
+      format = `${format}+bestaudio/best`;
+    }
   }
 
   const clientId = getClientId(req);

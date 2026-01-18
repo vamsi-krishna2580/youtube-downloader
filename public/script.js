@@ -23,7 +23,7 @@ async function getInfo() {
       return alert('Error: ' + data.error);
     }
 
-    // --- show basic video info ---
+    // ---------- BASIC VIDEO INFO ----------
     document.getElementById('info').innerHTML = `
       <h3>${data.title}</h3>
       <p>By: ${data.uploader || 'Unknown'}</p>
@@ -31,30 +31,36 @@ async function getInfo() {
       <img src="${data.thumbnails?.slice(-1)[0]?.url || ''}" width="320">
     `;
 
-    // --- build full format table like yt-dlp -F ---
     if (!data.formats || data.formats.length === 0) {
       document.getElementById('formats').innerHTML = `<p>No formats found.</p>`;
       return;
     }
 
-    let rows = data.formats.map(f => `
+    // ---------- FORMAT TABLE ----------
+    const rows = data.formats.map(f => `
       <tr>
         <td>${f.format_id}</td>
         <td>${f.ext || ''}</td>
-        <td>${f.resolution || (f.height ? f.height + 'p' : 'audio only')}</td>
+        <td>${f.resolution || ''}</td>
         <td>${f.fps || ''}</td>
         <td>${f.vcodec || ''}</td>
         <td>${f.acodec || ''}</td>
-        <td>${f.filesize ? (f.filesize / (1024 * 1024)).toFixed(1) + ' MB' : 'Unknown'}</td>
+        <td>${f.filesize || 'Unknown'}</td>
         <td>${f.tbr || ''}</td>
         <td>${f.format_note || ''}</td>
         <td>${f.protocol || ''}</td>
-        <td><button class="dl-btn" data-id="${f.format_id}" data-vcodec="${f.vcodec}" data-acodec="${f.acodec}">⬇️</button></td>
+        <td>
+          <button
+            class="dl-btn"
+            data-id="${f.format_id}"
+            data-vcodec="${f.vcodec}"
+            data-acodec="${f.acodec}"
+          >⬇️</button>
+        </td>
       </tr>
     `).join('');
 
-    const formatsDiv = document.getElementById('formats');
-    formatsDiv.innerHTML = `
+    document.getElementById('formats').innerHTML = `
       <table border="1" cellspacing="0" cellpadding="5">
         <thead>
           <tr>
@@ -75,45 +81,25 @@ async function getInfo() {
       </table>
     `;
 
-    // --- download button logic ---
+    // ---------- DOWNLOAD HANDLER ----------
     document.querySelectorAll('.dl-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const format = btn.dataset.id;
-        const vcodec = btn.dataset.vcodec;
-        const acodec = btn.dataset.acodec;
-
-        // --- detect if it's video-only ---
-        if (vcodec !== 'none' && acodec === 'none') {
-          const confirmMerge = confirm(
-            "This format is video-only (no audio).\n\nDo you want to:\n- OK → Download Video + Best Audio\n- Cancel → Download Video Only"
-          );
-
-          if (confirmMerge) {
-            startDownload(url, `${format}+bestaudio/best`);
-          } else {
-            startDownload(url, format);
-          }
-        }
-        // --- audio-only formats ---
-        else if (vcodec === 'none' && acodec !== 'none') {
-          startDownload(url, format);
-        }
-        // --- combined formats ---
-        else {
-          startDownload(url, format);
-        }
+        const formatId = btn.dataset.id;
+        startDownload(url, formatId);
       });
     });
 
   } catch (err) {
     document.getElementById('loader').style.display = 'none';
     console.error(err);
-    alert('Failed to fetch info: ' + err.message);
+    alert('Failed to fetch info');
   }
 }
 
-// 🔽 Helper function to start the download
-function startDownload(url, format) {
-  const downloadUrl = `/download?url=${encodeURIComponent(url)}&format=${format}`;
+// ---------- START DOWNLOAD (CRITICAL FIX) ----------
+function startDownload(url, formatId) {
+  const downloadUrl =
+    `/download?url=${encodeURIComponent(url)}&format=${encodeURIComponent(formatId)}`;
+
   window.location.href = downloadUrl;
 }
